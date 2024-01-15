@@ -13,3 +13,20 @@ def packet_callback(packet):
 
 # Sniff traffic on port 80
 sniff(prn=packet_callback, store=0, filter="tcp port 80", iface="your_network_interface")
+??
+from scapy.all import IP, TCP, Raw, sniff
+
+def packet_callback(packet):
+    if packet.haslayer(TCP) and packet.haslayer(Raw):
+        # Check for TCP packets with payload (Raw layer)
+        payload = packet[Raw].load.decode(errors='ignore')
+        
+        # Check for incomplete HTTP requests
+        if "GET" in payload and "HTTP/1.1" in payload:
+            # Check if the request is incomplete (e.g., lacks proper headers)
+            if "\r\n\r\n" not in payload:
+                print("Possible Slowloris attack detected from {}:{}".format(packet[IP].src, packet[TCP].sport))
+
+# Sniff traffic on port 80 on interface enp0s3
+sniff(prn=packet_callback, store=0, filter="tcp port 80", iface="enp0s3")
+
