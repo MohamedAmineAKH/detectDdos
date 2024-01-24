@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Chemin vers le fichier de logs Apache
+LOG_FILE="/var/log/apache2/access.log"
+
+# Nombre maximum de requêtes par seconde tolérées
+THRESHOLD=100
+
+# Fonction pour extraire l'adresse IP à partir des logs Apache
+extract_ip() {
+    awk '{print $1}' $LOG_FILE | sort | uniq -c | sort -nr | awk '$1 > '"$THRESHOLD"' {print $2}'
+}
+
+# Vérifier les requêtes par seconde
+check_ddos() {
+    while true; do
+        IPs=$(extract_ip)
+        if [ ! -z "$IPs" ]; then
+            echo "Attaque DDoS détectée. Adresses IP suspectes : $IPs"
+            # Vous pouvez ajouter ici des règles pour bloquer les adresses IP, notifier, etc.
+        fi
+        sleep 1
+    done
+}
+
+# Démarrer la détection
+check_ddos
