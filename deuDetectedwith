@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Emplacement du fichier de logs Apache
+LOG_FILE="/var/log/apache2/access.log"
+
+# Seuil de requêtes par seconde à partir duquel l'alerte est déclenchée
+THRESHOLD=100
+
+# Fonction pour vérifier les attaques DDoS
+check_ddos() {
+    while true; do
+        # Extraire les adresses IP avec un nombre élevé de requêtes
+        suspicious_ips=$(awk '{print $1}' $LOG_FILE | sort | uniq -c | sort -nr | awk '$1 > '"$THRESHOLD"' {print $2}')
+
+        if [ ! -z "$suspicious_ips" ]; then
+            echo "Attaque DDoS détectée. Adresses IP suspectes : $suspicious_ips"
+            # Vous pouvez ajouter ici des règles pour bloquer les adresses IP, notifier, etc.
+        fi
+
+        # Attendre avant de vérifier à nouveau (ajustez si nécessaire)
+        sleep 60
+    done
+}
+
+# Démarrer la vérification des attaques DDoS
+check_ddos
